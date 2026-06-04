@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="TOKI">
+<meta name="theme-color" content="#ffffff">
+<title>TOKI — Mi agenda</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #111; min-height: 100dvh; }
+  :root {
+    --bg: #fff; --bg2: #f5f5f3; --bg3: #eeecea;
+    --text: #111; --text2: #555; --text3: #999;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --blue-bg: #e6f1fb; --blue-text: #0c447c; --blue-border: #b5d4f4;
+    --red-bg: #fcebeb; --red-text: #a32d2d; --red-border: #f09595;
+    --amber-bg: #faeeda; --amber-text: #854f0b; --amber-border: #ef9f27;
+    --green-bg: #eaf3de; --green-text: #3b6d11; --green-border: #97c459;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a; --bg2: #242424; --bg3: #2e2e2e;
+      --text: #f0f0f0; --text2: #aaa; --text3: #666;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --blue-bg: #0c2a45; --blue-text: #85b7eb; --blue-border: #185fa5;
+      --red-bg: #3a1010; --red-text: #f09595; --red-border: #a32d2d;
+      --amber-bg: #2e1e05; --amber-text: #fac775; --amber-border: #854f0b;
+      --green-bg: #0e2205; --green-text: #c0dd97; --green-border: #3b6d11;
+    }
+    body { background: var(--bg); }
+  }
+  #app { max-width: 560px; margin: 0 auto; padding: 0 16px 80px; }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 12px; border-bottom: 0.5px solid var(--border); margin-bottom: 12px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 32px; height: 32px; border-radius: 50%; background: var(--blue-bg); display: flex; align-items: center; justify-content: center; }
+  .logo-icon i { font-size: 16px; color: var(--blue-text); }
+  .logo-name { font-weight: 500; font-size: 16px; }
+  .tabs { display: flex; gap: 4px; }
+  .tab-btn { padding: 5px 14px; font-size: 13px; border-radius: var(--radius); cursor: pointer; background: transparent; border: 0.5px solid var(--border); color: var(--text2); font-family: inherit; }
+  .tab-btn.active { border: 1.5px solid var(--blue-border); background: var(--blue-bg); color: var(--blue-text); font-weight: 500; }
+
+  /* chat */
+  .messages { min-height: 300px; padding-bottom: 8px; }
+  .msg-row { display: flex; margin-bottom: 10px; }
+  .msg-row.user { justify-content: flex-end; }
+  .msg-row.bot { justify-content: flex-start; }
+  .bubble { max-width: 80%; padding: 8px 12px; font-size: 14px; line-height: 1.5; }
+  .bubble.user { background: var(--blue-bg); color: var(--blue-text); border-radius: 14px 14px 4px 14px; }
+  .bubble.bot { background: var(--bg2); color: var(--text); border-radius: 14px 14px 14px 4px; }
+  .typing { display: flex; gap: 4px; padding: 8px 12px; background: var(--bg2); border-radius: 14px 14px 14px 4px; width: fit-content; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); animation: bounce 1s infinite; }
+  .dot:nth-child(2) { animation-delay: 150ms; }
+  .dot:nth-child(3) { animation-delay: 300ms; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+
+  .input-area { border-top: 0.5px solid var(--border); padding-top: 12px; display: flex; gap: 8px; align-items: flex-end; }
+  .input-area textarea { flex: 1; resize: none; font-size: 14px; padding: 8px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); line-height: 1.5; font-family: inherit; outline: none; }
+  .input-area textarea:focus { border-color: var(--blue-border); }
+  .btn-icon { width: 38px; height: 38px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 18px; }
+  .btn-icon.mic-active { border: 1.5px solid var(--red-border); background: var(--red-bg); color: var(--red-text); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .btn-col { display: flex; flex-direction: column; gap: 4px; }
+  .hint { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+  .voice-tip { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; font-size: 13px; color: var(--text2); display: flex; gap: 10px; align-items: flex-start; }
+  .voice-tip-close { background: transparent; border: none; cursor: pointer; color: var(--text3); padding: 0; font-size: 14px; }
+
+  /* tasks */
+  .section-label { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .task-group { margin-bottom: 20px; }
+  .task-card { padding: 10px 12px; margin-bottom: 6px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); }
+  .task-card.dimmed { opacity: 0.5; }
+  .task-row { display: flex; align-items: flex-start; gap: 10px; }
+  .check-btn { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; border: 1.5px solid var(--border2); }
+  .check-btn.done { border-color: #639922; background: var(--green-bg); }
+  .check-btn i { font-size: 11px; color: #3b6d11; }
+  .task-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .task-title.done { text-decoration: line-through; color: var(--text3); }
+  .task-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; align-items: center; }
+  .badge { font-size: 11px; padding: 1px 7px; border-radius: 99px; }
+  .badge.alta { background: var(--red-bg); color: var(--red-text); border: 0.5px solid var(--red-border); }
+  .badge.media { background: var(--amber-bg); color: var(--amber-text); border: 0.5px solid var(--amber-border); }
+  .badge.baja { background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-border); }
+  .cat-label { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 2px; }
+  .time-label { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 2px; }
+  .delete-btn { background: transparent; border: none; cursor: pointer; color: var(--text3); padding: 2px; }
+  .gcal-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--blue-text); text-decoration: none; padding: 3px 8px; border: 0.5px solid var(--blue-border); border-radius: var(--radius); background: var(--blue-bg); margin-top: 8px; }
+  .task-footer { border-top: 0.5px solid var(--border); margin-top: 8px; padding-top: 8px; }
+  .clear-btn { font-size: 12px; color: var(--red-text); background: transparent; border: none; cursor: pointer; margin-top: 4px; font-family: inherit; }
+  .empty { text-align: center; padding: 3rem 0; color: var(--text3); }
+  .empty i { font-size: 32px; display: block; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-calendar-event"></i></div>
+      <span class="logo-name">TOKI</span>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-chat" onclick="showTab('chat')">Chat</button>
+      <button class="tab-btn" id="tab-tasks" onclick="showTab('tasks')">Tareas</button>
+    </div>
+  </div>
+
+  <div id="panel-chat">
+    <div class="messages" id="messages"></div>
+    <div id="voice-tip" style="display:none" class="voice-tip">
+      <i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:1px;color:var(--blue-text)"></i>
+      <div style="flex:1">
+        <strong style="display:block;margin-bottom:3px;color:var(--text)">Cómo dictar en tu Samsung</strong>
+        Tocá el campo de texto → teclado → micrófono del teclado → dictá → enviá.
+      </div>
+      <button class="voice-tip-close" onclick="document.getElementById('voice-tip').style.display='none'">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+    <div class="input-area">
+      <textarea id="input" rows="2" placeholder="Escribí o dictá tu tarea..."></textarea>
+      <div class="btn-col">
+        <button class="btn-icon" id="mic-btn" onclick="toggleMic()" aria-label="Micrófono">
+          <i class="ti ti-microphone"></i>
+        </button>
+        <button class="btn-icon" onclick="sendMessage()" aria-label="Enviar">
+          <i class="ti ti-send"></i>
+        </button>
+      </div>
+    </div>
+    <p class="hint" id="hint-text">Tocá el micrófono para dictar · Enter para enviar</p>
+  </div>
+
+  <div id="panel-tasks" style="display:none"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'toki-tasks-v1';
+const CHAT_KEY = 'toki-chat-v1';
+const API_KEY = ''; // dejá vacío — la API key la cargás desde la URL o variable
+
+let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let messages = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]');
+let listening = false;
+let recognition = null;
+let taskCounter = Date.now();
+
+const TODAY = new Date().toISOString().split('T')[0];
+
+const SYSTEM_PROMPT = `Sos TOKI, un asistente de agenda conversacional en español. Tu trabajo es interpretar mensajes en lenguaje natural y gestionar tareas/eventos.
+
+Respondés SIEMPRE con un JSON válido (sin markdown, sin backticks, sin texto fuera del JSON) con esta estructura:
+{
+  "reply": "mensaje conversacional breve y amigable",
+  "action": "none" | "add" | "complete" | "delete" | "list" | "clear_done",
+  "task": { "title": "...", "date": "YYYY-MM-DD o null", "time": "HH:MM o null", "priority": "alta|media|baja", "category": "trabajo|personal|salud|hogar|otro" }
+}
+Si hay múltiples tareas: action "add" con array "tasks".
+Para complete/delete: incluí "taskId". Para list/clear_done: sin task.
+Fechas relativas: hoy es ${TODAY}. Prioridad por contexto. Categoría por contexto.
+Si el usuario saluda, respondé con action "none". Si pide ver tareas, action "list".`;
+
+function newId() { return 't_' + (taskCounter++); }
+
+function saveTasks() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+function saveChat() { localStorage.setItem(CHAT_KEY, JSON.stringify(messages.slice(-40))); }
+
+function formatDate(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00');
+  const today = new Date(TODAY + 'T00:00:00');
+  const diff = Math.round((d - today) / 86400000);
+  if (diff === 0) return 'hoy';
+  if (diff === 1) return 'mañana';
+  if (diff === -1) return 'ayer';
+  if (diff > 1 && diff < 7) return d.toLocaleDateString('es-AR', { weekday: 'long' });
+  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+}
+
+function buildGCalUrl(task) {
+  const base = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+  const title = encodeURIComponent(task.title);
+  let dates = '';
+  if (task.date) {
+    if (task.time) {
+      const [h, m] = task.time.split(':').map(Number);
+      const start = new Date(task.date + 'T00:00:00');
+      start.setHours(h, m, 0);
+      const end = new Date(start.getTime() + 3600000);
+      const fmt = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      dates = `&dates=${fmt(start)}/${fmt(end)}`;
+    } else {
+      const d = task.date.replace(/-/g, '');
+      dates = `&dates=${d}/${d}`;
+    }
+  }
+  return `${base}&text=${title}${dates}`;
+}
+
+function addMessage(role, text) {
+  messages.push({ id: newId(), role, text });
+  saveChat();
+  renderMessages();
+}
+
+function renderMessages() {
+  const container = document.getElementById('messages');
+  container.innerHTML = '';
+  messages.forEach(m => {
+    const row = document.createElement('div');
+    row.className = `msg-row ${m.role === 'user' ? 'user' : 'bot'}`;
+    const bubble = document.createElement('div');
+    bubble.className = `bubble ${m.role === 'user' ? 'user' : 'bot'}`;
+    bubble.textContent = m.text;
+    row.appendChild(bubble);
+    container.appendChild(row);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  const container = document.getElementById('messages');
+  const t = document.createElement('div');
+  t.id = 'typing';
+  t.className = 'typing';
+  t.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  container.appendChild(t);
+  container.scrollTop = container.scrollHeight;
+}
+function hideTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  addMessage('user', text);
+  showTyping();
+
+  const tasksSummary = tasks.length
+    ? '\nTareas actuales (JSON):\n' + JSON.stringify(tasks)
+    : '\nEl usuario no tiene tareas todavía.';
+
+  // Obtener API key desde localStorage (se configura la primera vez)
+  let apiKey = localStorage.getItem('toki-api-key') || '';
+  if (!apiKey) {
+    apiKey = prompt('Para usar TOKI necesitás una API key de Anthropic.\nObtené una gratis en: https://console.anthropic.com\n\nPegá tu API key acá:');
+    if (apiKey) localStorage.setItem('toki-api-key', apiKey.trim());
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT + tasksSummary,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
+    const data = await res.json();
+    const raw = (data.content || []).map(b => b.text || '').join('').trim();
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/^```json|^```|```$/g, '').trim()); }
+    catch (_) { parsed = { reply: 'No pude procesar eso, ¿podés reformularlo?', action: 'none' }; }
+
+    hideTyping();
+    addMessage('bot', parsed.reply);
+
+    if (parsed.action === 'add') {
+      const toAdd = parsed.tasks || (parsed.task ? [parsed.task] : []);
+      toAdd.forEach(t => tasks.push({ ...t, id: newId(), done: false, createdAt: TODAY }));
+      saveTasks();
+      if (toAdd.some(t => t.date)) showTab('tasks');
+    } else if (parsed.action === 'complete' && parsed.taskId) {
+      const t = tasks.find(t => t.id === parsed.taskId);
+      if (t) { t.done = true; saveTasks(); }
+    } else if (parsed.action === 'delete' && parsed.taskId) {
+      tasks = tasks.filter(t => t.id !== parsed.taskId);
+      saveTasks();
+    } else if (parsed.action === 'clear_done') {
+      tasks = tasks.filter(t => !t.done);
+      saveTasks();
+    } else if (parsed.action === 'list') {
+      showTab('tasks');
+    }
+    renderTasks();
+  } catch (e) {
+    hideTyping();
+    addMessage('bot', 'Ups, algo salió mal. Verificá tu conexión y probá de nuevo.');
+  }
+}
+
+function renderTasks() {
+  const panel = document.getElementById('panel-tasks');
+  const pending = tasks.filter(t => !t.done);
+  const done = tasks.filter(t => t.done);
+
+  if (tasks.length === 0) {
+    panel.innerHTML = '<div class="empty"><i class="ti ti-clipboard"></i><span style="font-size:14px">No hay tareas todavía.</span></div>';
+    return;
+  }
+
+  const grouped = {};
+  pending.forEach(t => {
+    const k = t.date || 'sin fecha';
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(t);
+  });
+  const keys = Object.keys(grouped).sort((a,b) => {
+    if (a==='sin fecha') return 1;
+    if (b==='sin fecha') return -1;
+    return a.localeCompare(b);
+  });
+
+  let html = '';
+  keys.forEach(key => {
+    const label = key === 'sin fecha' ? 'Sin fecha'
+      : `${formatDate(key)} · ${new Date(key+'T00:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'short'})}`;
+    html += `<div class="task-group"><div class="section-label">${label}</div>`;
+    grouped[key].forEach(t => { html += taskCardHTML(t, false); });
+    html += '</div>';
+  });
+
+  if (done.length > 0) {
+    html += `<div class="task-group"><div class="section-label">Completadas (${done.length})</div>`;
+    done.forEach(t => { html += taskCardHTML(t, true); });
+    html += `<button class="clear-btn" onclick="clearDone()">Borrar completadas</button></div>`;
+  }
+
+  panel.innerHTML = html;
+
+  // update tab label
+  const btn = document.getElementById('tab-tasks');
+  btn.textContent = pending.length ? `Tareas (${pending.length})` : 'Tareas';
+}
+
+function taskCardHTML(t, dimmed) {
+  const catIcon = { trabajo:'ti-briefcase', personal:'ti-user', salud:'ti-heart', hogar:'ti-home', otro:'ti-tag' }[t.category] || 'ti-tag';
+  const checkClass = t.done ? 'check-btn done' : 'check-btn';
+  const checkIcon = t.done ? '<i class="ti ti-check"></i>' : '';
+  const titleClass = t.done ? 'task-title done' : 'task-title';
+  const timeHTML = t.time ? `<span class="time-label"><i class="ti ti-clock" style="font-size:11px"></i> ${t.time}</span>` : '';
+  const gcalHTML = t.date && !t.done ? `<div class="task-footer"><a class="gcal-btn" href="${buildGCalUrl(t)}" target="_blank"><i class="ti ti-brand-google" style="font-size:13px"></i> Agregar a Google Calendar</a></div>` : '';
+  return `
+    <div class="task-card ${dimmed ? 'dimmed' : ''}">
+      <div class="task-row">
+        <button class="${checkClass}" onclick="toggleDone('${t.id}')" aria-label="Completar">${checkIcon}</button>
+        <div style="flex:1;min-width:0">
+          <div class="${titleClass}">${t.title}</div>
+          <div class="task-meta">
+            ${timeHTML}
+            <span class="badge ${t.priority||'media'}">${t.priority||'media'}</span>
+            <span class="cat-label"><i class="ti ${catIcon}" style="font-size:11px"></i> ${t.category||'otro'}</span>
+          </div>
+        </div>
+        <button class="delete-btn" onclick="deleteTask('${t.id}')" aria-label="Eliminar"><i class="ti ti-x" style="font-size:14px"></i></button>
+      </div>
+      ${gcalHTML}
+    </div>`;
+}
+
+function toggleDone(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t) { t.done = !t.done; saveTasks(); renderTasks(); }
+}
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  saveTasks(); renderTasks();
+}
+function clearDone() {
+  tasks = tasks.filter(t => !t.done);
+  saveTasks(); renderTasks();
+}
+
+function showTab(tab) {
+  document.getElementById('panel-chat').style.display = tab === 'chat' ? 'block' : 'none';
+  document.getElementById('panel-tasks').style.display = tab === 'tasks' ? 'block' : 'none';
+  document.getElementById('tab-chat').className = 'tab-btn' + (tab === 'chat' ? ' active' : '');
+  document.getElementById('tab-tasks').className = 'tab-btn' + (tab === 'tasks' ? ' active' : '');
+  if (tab === 'tasks') renderTasks();
+}
+
+function toggleMic() {
+  const hasSR = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+  if (!hasSR) { document.getElementById('voice-tip').style.display = 'flex'; return; }
+  if (listening) {
+    recognition && recognition.stop();
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'es-AR';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onstart = () => {
+    listening = true;
+    document.getElementById('mic-btn').className = 'btn-icon mic-active';
+    document.getElementById('hint-text').textContent = 'Escuchando... tocá para detener';
+  };
+  recognition.onresult = (e) => {
+    const t = e.results[0][0].transcript;
+    const inp = document.getElementById('input');
+    inp.value = (inp.value ? inp.value + ' ' : '') + t;
+  };
+  recognition.onerror = () => {
+    listening = false;
+    document.getElementById('mic-btn').className = 'btn-icon';
+    document.getElementById('hint-text').textContent = 'Tocá el micrófono para dictar · Enter para enviar';
+    document.getElementById('voice-tip').style.display = 'flex';
+  };
+  recognition.onend = () => {
+    listening = false;
+    document.getElementById('mic-btn').className = 'btn-icon';
+    document.getElementById('hint-text').textContent = 'Tocá el micrófono para dictar · Enter para enviar';
+  };
+  recognition.start();
+}
+
+document.getElementById('input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+// init
+if (messages.length === 0) {
+  messages.push({ id: 'welcome', role: 'bot', text: 'Hola, soy TOKI. Contame qué tenés que hacer hoy — escribilo o dictalo.' });
+  saveChat();
+}
+renderMessages();
+renderTasks();
+</script>
+</body>
+</html>
